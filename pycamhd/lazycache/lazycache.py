@@ -7,8 +7,16 @@ from io import BytesIO
 import urllib.parse
 import numpy as np
 
-def get_metadata( url ):
-    r = requests.get( url )
+DEFAULT_LAZYCACHE = 'https://camhd-app-dev.appspot.com/v1/org/oceanobservatories/rawdata/files'
+
+
+def get_metadata( path, lazycache = DEFAULT_LAZYCACHE ):
+    ## Merge path into lazycache URL
+    url = urllib.parse.urlsplit( lazycache )
+    url = url._replace( path= url.path + path )
+    full_url = urllib.parse.urlunsplit( url )
+
+    r = requests.get( full_url )
 
     if r.status_code != 200:
         return
@@ -16,11 +24,12 @@ def get_metadata( url ):
     return r.json()
 
 
+
 ## Retrieve the frame'th frame from the mirror site at url
-def get_frame( url, frame_num, format = 'np' ):
-    url = urllib.parse.urlsplit( url )
-    new_url = url._replace( path= url.path + "/frame/%d" % frame_num )
-    full_url = urllib.parse.urlunsplit( new_url )
+def get_frame( path, frame_num, format = 'np', lazycache = DEFAULT_LAZYCACHE ):
+    url = urllib.parse.urlsplit( lazycache )
+    url = url._replace( path= url.path + path + "/frame/%d" % frame_num )
+    full_url = urllib.parse.urlunsplit( url )
 
     r = requests.get( full_url  )
 
