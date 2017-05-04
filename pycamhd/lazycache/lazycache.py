@@ -32,7 +32,7 @@ def get_frame( url, frame_num, format = 'np' ):
     if format == 'np':
         png = Image.open( BytesIO( r.content ) )
         return np.array( png.convert() )
-    elif format == 'png':
+    elif format == 'image':
         return Image.open( BytesIO( r.content ) )
     else:
         print("Don't understand format type \"%s\"" % format)

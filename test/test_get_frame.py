@@ -20,13 +20,12 @@ def test_get_frame_np():
     assert shape[0] == 1080
 
 
-def test_get_frame_png():
+def test_get_frame_image():
     # download moov_atom from remote file
-    img = camhd.get_frame( cache_url + filename, 5000, format = 'png' )
+    img = camhd.get_frame( cache_url + filename, 5000, format = 'image' )
 
     assert isinstance( img, Image.Image )
 
     shape = img.size
     assert shape[0] == 1920
     assert shape[1] == 1080
-    assert img.format == 'PNG'
