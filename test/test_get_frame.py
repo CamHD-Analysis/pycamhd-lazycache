@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 
 import pycamhd.lazycache as camhd
-
 import numpy as np
 from PIL import Image
 
 # remote file
 filename = '/RS03ASHS/PN03B/06-CAMHDA301/2016/11/13/CAMHDA301-20161113T000000Z.mov'
-cache_url = 'https://camhd-app-dev.appspot.com/v1/org/oceanobservatories/rawdata/files'
 
 def test_get_frame_np():
     # download moov_atom from remote file
-    img = camhd.get_frame( cache_url + filename, 5000 )
+    img = camhd.get_frame( filename, 5000 )
 
     assert isinstance( img, np.ndarray )
 
@@ -22,7 +20,7 @@ def test_get_frame_np():
 
 def test_get_frame_image():
     # download moov_atom from remote file
-    img = camhd.get_frame( cache_url + filename, 5000, format = 'image' )
+    img = camhd.get_frame( filename, 5000, format = 'image' )
 
     assert isinstance( img, Image.Image )
 
