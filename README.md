@@ -1,8 +1,6 @@
 # PyLazyCamHD
 
-
-Python API for accessing a [go-lazycache](https://github.com/amarburg/go-lazycache) via its HTTP interface.
-
+Python API for accessing [CamHD](http://novae.ocean.washington.edu/story/Ashes_CAMHD_Live) data from a  [go-lazycache](https://github.com/amarburg/go-lazycache) instance.   This package uses the HTTP API exposed by Lazycache, so it's extremely lightweight  --- basically just wrappers around HTTP requests.
 
 
 

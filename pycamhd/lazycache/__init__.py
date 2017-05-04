@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from .pylazycamhd import *
+from .lazycache import *
 
 __version__ = '0.1.0'
 
