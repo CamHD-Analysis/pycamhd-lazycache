@@ -7,6 +7,7 @@ from PIL import Image
 # remote file
 filename = '/RS03ASHS/PN03B/06-CAMHDA301/2016/11/13/CAMHDA301-20161113T000000Z.mov'
 test_lazycache = 'https://camhd-app-dev.appspot.com/v1/org/oceanobservatories/rawdata/files'
+test_lazycache = 'http://localhost:9080/v1/org/oceanobservatories/rawdata/files'
 
 def test_get_frame_np():
     # download moov_atom from remote file
@@ -41,3 +42,9 @@ def test_get_frame_np_oo():
     shape = img.shape
     assert shape[1] == 1920
     assert shape[0] == 1080
+
+
+## Test file can be run as a standalone.  Why?  Was diagnosing segfaults
+# and some of the debug output was being hidden by pytest
+if __name__ == "__main__":
+    test_get_frame_image()
