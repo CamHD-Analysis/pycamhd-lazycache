@@ -27,6 +27,6 @@ setup(name='pycamhd.lazycache',
       author_email='amarburg@apl.washington.edu',
       license='MIT',
       packages=['pycamhd.lazycache'],
-      install_requires=['requests'],
+      install_requires=['requests','pillow'],
       setup_requires=['pytest-runner'],
       tests_require=['pytest', 'numpy', 'pillow'])

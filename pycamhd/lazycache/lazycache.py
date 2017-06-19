@@ -11,8 +11,8 @@ import re
 DEFAULT_LAZYCACHE = 'https://camhd-app-dev.appspot.com/v1/org/oceanobservatories/rawdata/files'
 
 
-def get_metadata( url, lazycache = DEFAULT_LAZYCACHE ):
-    r = requests.get( url )
+def get_metadata( url, lazycache = DEFAULT_LAZYCACHE, timeout = 2 ):
+    r = requests.get( url, timeout=timeout )
 
     if r.status_code != 200:
         return
@@ -21,12 +21,12 @@ def get_metadata( url, lazycache = DEFAULT_LAZYCACHE ):
 
 
 ## Retrieve the frame'th frame from the mirror site at url
-def get_frame( url, frame_num, format = 'np' ):
+def get_frame( url, frame_num, format = 'np', timeout = 2 ):
     url = urllib.parse.urlsplit( url )
     url = url._replace( path= url.path + "/frame/%d" % frame_num )
     full_url = urllib.parse.urlunsplit( url )
 
-    r = requests.get( full_url  )
+    r = requests.get( full_url, timeout = timeout  )
 
     if r.status_code != 200:
         return
@@ -71,11 +71,11 @@ class LazycacheAccessor:
         url = url._replace( path= url.path + path )
         return urllib.parse.urlunsplit( url )
 
-    def get_metadata( self, url ):
-        return get_metadata( self.merge_url( url ) )
+    def get_metadata( self, url, timeout = 2 ):
+        return get_metadata( self.merge_url( url ), timeout = timeout )
 
-    def get_frame( self, url, frame_num, format = 'np'):
-        return get_frame( self.merge_url( url ), frame_num, format )
+    def get_frame( self, url, frame_num, format = 'np', timeout = 2):
+        return get_frame( self.merge_url( url ), frame_num, format=format, timeout = timeout )
 
     def get_dir( self, url ):
         return get_dir( self.merge_url(url) )
