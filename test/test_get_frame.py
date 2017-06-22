@@ -6,8 +6,7 @@ from PIL import Image
 
 # remote file
 filename = '/RS03ASHS/PN03B/06-CAMHDA301/2016/11/13/CAMHDA301-20161113T000000Z.mov'
-test_lazycache = 'https://camhd-app-dev.appspot.com/v1/org/oceanobservatories/rawdata/files'
-test_lazycache = 'http://localhost:9080/v1/org/oceanobservatories/rawdata/files'
+test_lazycache = 'https://camhd-app-dev-nocache.appspot.com/v1/org/oceanobservatories/rawdata/files'
 
 def test_get_frame_np():
     # download moov_atom from remote file
@@ -21,15 +20,21 @@ def test_get_frame_np():
 
 
 def test_get_frame_image():
-    # download moov_atom from remote file
-    img = camhd.get_frame( test_lazycache + filename, 5000, format = 'image' )
 
-    assert isinstance( img, Image.Image )
+    for format in ['png', 'jpeg', 'jpg']:
+        # download moov_atom from remote file
+        img = camhd.get_frame( test_lazycache + filename, 5000, format = format )
 
-    shape = img.size
-    assert shape[0] == 1920
-    assert shape[1] == 1080
+        assert isinstance( img, Image.Image )
 
+        ## PIL only knows "JPEG"
+        format = "jpeg" if format == 'jpg' else format
+
+        assert img.format == format.upper()
+
+        shape = img.size
+        assert shape[0] == 1920
+        assert shape[1] == 1080
 
 
 ## Object-oriented version

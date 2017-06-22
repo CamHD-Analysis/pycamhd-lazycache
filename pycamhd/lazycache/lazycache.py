@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+
 from PIL import Image
 from io import BytesIO
 
@@ -8,43 +11,81 @@ import urllib.parse
 import numpy as np
 import re
 
+import logging
+
 DEFAULT_LAZYCACHE = 'https://camhd-app-dev.appspot.com/v1/org/oceanobservatories/rawdata/files'
 
+DEFAULT_TIMEOUT = 10  # seconds
 
-def get_metadata( url, lazycache = DEFAULT_LAZYCACHE, timeout = 2 ):
-    r = requests.get( url, timeout=timeout )
+## Based on retry methods described at:
+## https://www.peterbe.com/plog/best-practice-with-retries-with-requests
+
+def requests_retry_session(
+    retries=3,
+    backoff_factor=0.3,
+    status_forcelist=(500, 502, 504),
+    session=None,
+):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session
+
+
+def get_metadata( url, lazycache = DEFAULT_LAZYCACHE, timeout = DEFAULT_TIMEOUT ):
+    r = requests_retry_session().get( url, timeout=timeout )
 
     if r.status_code != 200:
-        return
+        return None
 
     return r.json()
 
 
 ## Retrieve the frame'th frame from the mirror site at url
-def get_frame( url, frame_num, format = 'np', timeout = 2 ):
+def get_frame( url, frame_num, format = 'np', timeout = DEFAULT_TIMEOUT ):
     url = urllib.parse.urlsplit( url )
-    url = url._replace( path= url.path + "/frame/%d" % frame_num )
+
+    DIRECT_FROM_SERVER_FORMATS = ['png', 'jpg', 'jpeg']
+
+    ## These two formats can be requested directly from the server
+    fmt = ""
+    if format in DIRECT_FROM_SERVER_FORMATS:
+        fmt = ".%s" % format
+
+    url = url._replace( path = url.path + "/frame/%d%s" % (frame_num,fmt) )
+
+
+
     full_url = urllib.parse.urlunsplit( url )
 
-    r = requests.get( full_url, timeout = timeout  )
+    #logging.info("pycamhd.lazycache: requesting %s" % full_url )
+
+    r = requests_retry_session().get( full_url, timeout = timeout  )
 
     if r.status_code != 200:
-        return
+        return None
 
-    png = Image.open( BytesIO( r.content ) )
-    png.save("frame.png")
+    img = Image.open( BytesIO( r.content ) )
 
-    # TODO.  Lots more validation here could be done here...
+    # TODO.  More validation here could be done here...
+
     if format == 'np':
-        return np.array( png.convert() )
-    elif format == 'image':
-        return png
+        return np.array( img.convert() )
+    elif format in DIRECT_FROM_SERVER_FORMATS:
+        return img
     else:
-        print("Don't understand format type \"%s\"" % format)
-        return
+        logging.error("Don't understand format type \"%s\"" % format)
+        return None
 
 def get_dir( url ):
-    print("Querying ", url)
     r = requests.get( url )
     return r.json()
 
@@ -71,10 +112,10 @@ class LazycacheAccessor:
         url = url._replace( path= url.path + path )
         return urllib.parse.urlunsplit( url )
 
-    def get_metadata( self, url, timeout = 2 ):
+    def get_metadata( self, url, timeout = DEFAULT_TIMEOUT ):
         return get_metadata( self.merge_url( url ), timeout = timeout )
 
-    def get_frame( self, url, frame_num, format = 'np', timeout = 2):
+    def get_frame( self, url, frame_num, format = 'np', timeout =  DEFAULT_TIMEOUT ):
         return get_frame( self.merge_url( url ), frame_num, format=format, timeout = timeout )
 
     def get_dir( self, url ):
