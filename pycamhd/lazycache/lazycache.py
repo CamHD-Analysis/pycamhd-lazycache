@@ -40,7 +40,7 @@ def requests_retry_session(
     return session
 
 
-def get_metadata( url, lazycache = DEFAULT_LAZYCACHE, timeout = DEFAULT_TIMEOUT ):
+def get_metadata( url, lazycache = DEFAULT_LAZYCACHE, timeout = DEFAULT_TIMEOUT):
     r = requests_retry_session().get( url, timeout=timeout )
 
     if r.status_code != 200:
@@ -51,6 +51,7 @@ def get_metadata( url, lazycache = DEFAULT_LAZYCACHE, timeout = DEFAULT_TIMEOUT 
 
 ## Retrieve the frame'th frame from the mirror site at url
 def get_frame( url, frame_num, format = 'np', timeout = DEFAULT_TIMEOUT ):
+
     url = urllib.parse.urlsplit( url )
 
     DIRECT_FROM_SERVER_FORMATS = ['png', 'jpg', 'jpeg']
@@ -102,6 +103,15 @@ def find( url, regexp = 'mov$' ):
     return out
 
 
+def convert_basename( basename ):
+    prog = re.compile("CAMHDA301-(\d{4})(\d{2})(\d{2})T\d{6}Z")
+    match = re.match(prog, basename)
+
+    return "/RS03ASHS/PN03B/06-CAMHDA301/%04d/%02d/%02d/%s.mov" % (int(match.group(1)), int(match.group(2)), int(match.group(3)),basename)
+
+
+
+# An object-oriented version of the same API
 class LazycacheAccessor:
     def __init__(self, lazycache = DEFAULT_LAZYCACHE ):
         self.lazycache = lazycache
