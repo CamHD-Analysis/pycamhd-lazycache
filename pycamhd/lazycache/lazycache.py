@@ -88,6 +88,10 @@ def get_frame( url, frame_num, format = 'np', timeout = DEFAULT_TIMEOUT ):
 
 def get_dir( url ):
     r = requests.get( url )
+
+    if r.status_code != 200:
+        return None
+
     return r.json()
 
 def find( url, regexp = 'mov$' ):
