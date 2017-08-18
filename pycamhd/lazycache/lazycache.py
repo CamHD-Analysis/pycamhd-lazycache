@@ -13,7 +13,7 @@ import re
 
 import logging
 
-DEFAULT_LAZYCACHE = 'https://camhd-app-dev.appspot.com/v1/org/oceanobservatories/rawdata/files'
+DEFAULT_LAZYCACHE = 'https://camhd-cache.appspot.com/v1/org/oceanobservatories/rawdata/files'
 
 DEFAULT_TIMEOUT = 10  # seconds
 
