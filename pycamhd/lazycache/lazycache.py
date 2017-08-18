@@ -40,7 +40,7 @@ def requests_retry_session(
     return session
 
 
-def get_metadata( url, lazycache = DEFAULT_LAZYCACHE, timeout = DEFAULT_TIMEOUT):
+def get_metadata( url, timeout = DEFAULT_TIMEOUT):
     r = requests_retry_session().get( url, timeout=timeout )
 
     if r.status_code != 200:
@@ -118,7 +118,7 @@ def convert_basename( basename ):
 # An object-oriented version of the same API
 class LazycacheAccessor:
     def __init__(self, lazycache = DEFAULT_LAZYCACHE, verbose = False ):
-        self.lazycache = lazycache
+        self.lazycache = lazycache if lazycache else DEFAULT_LAZYCACHE
         self.verbose = verbose
 
     def merge_url( self, path ):
@@ -161,4 +161,7 @@ class LazycacheAccessor:
 
 
 def lazycache( url  = DEFAULT_LAZYCACHE, verbose=False):
+    if not url:
+        url = DEFAULT_LAZYCACHE
+
     return LazycacheAccessor(url, verbose=verbose)
