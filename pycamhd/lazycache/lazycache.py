@@ -88,6 +88,10 @@ def get_frame( url, frame_num, format = 'np', timeout = DEFAULT_TIMEOUT ):
 
 def get_dir( url ):
     r = requests.get( url )
+
+    if r.status_code != 200:
+        return None
+
     return r.json()
 
 def find( url, regexp = 'mov$' ):
@@ -113,8 +117,9 @@ def convert_basename( basename ):
 
 # An object-oriented version of the same API
 class LazycacheAccessor:
-    def __init__(self, lazycache = DEFAULT_LAZYCACHE ):
+    def __init__(self, lazycache = DEFAULT_LAZYCACHE, verbose = False ):
         self.lazycache = lazycache
+        self.verbose = verbose
 
     def merge_url( self, path ):
         ## Merge path into lazycache URL
@@ -123,13 +128,22 @@ class LazycacheAccessor:
         return urllib.parse.urlunsplit( url )
 
     def get_metadata( self, url, timeout = DEFAULT_TIMEOUT ):
-        return get_metadata( self.merge_url( url ), timeout = timeout )
+        url = self.merge_url( url )
+        if self.verbose:
+            print("get_metadata: %s" % url)
+        return get_metadata( url, timeout = timeout )
 
     def get_frame( self, url, frame_num, format = 'np', timeout =  DEFAULT_TIMEOUT ):
-        return get_frame( self.merge_url( url ), frame_num, format=format, timeout = timeout )
+        url = self.merge_url( url )
+        if self.verbose:
+            print("get_frame: %s" % url)
+        return get_frame( url, frame_num, format=format, timeout = timeout )
 
     def get_dir( self, url ):
-        return get_dir( self.merge_url(url) )
+        url = self.merge_url( url )
+        if self.verbose:
+            print("get_dir: %s" % url)
+        return get_dir( url )
 
     ## Duplicate this functionality so that URLs remain repo-relative
     def find( self, url, regexp = 'mov$' ):
@@ -146,5 +160,5 @@ class LazycacheAccessor:
 
 
 
-def lazycache( url  = DEFAULT_LAZYCACHE ):
-    return LazycacheAccessor( url )
+def lazycache( url  = DEFAULT_LAZYCACHE, verbose=False):
+    return LazycacheAccessor(url, verbose=verbose)
