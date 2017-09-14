@@ -61,7 +61,7 @@ def get_frame( url, frame_num, format = 'np', timeout = DEFAULT_TIMEOUT ):
     if format in DIRECT_FROM_SERVER_FORMATS:
         fmt = ".%s" % format
 
-    url = url._replace( path = url.path + "/frame/%d%s" % (frame_num,fmt) )
+    url = url._replace( path = url.path + bytes("/frame/%d%s" % (frame_num,fmt),'utf-8') )
 
 
 
@@ -111,20 +111,20 @@ def convert_basename( basename ):
     prog = re.compile("CAMHDA301-(\d{4})(\d{2})(\d{2})T\d{6}Z")
     match = re.match(prog, basename)
 
-    return "/RS03ASHS/PN03B/06-CAMHDA301/%04d/%02d/%02d/%s.mov" % (int(match.group(1)), int(match.group(2)), int(match.group(3)),basename)
+    return bytes("/RS03ASHS/PN03B/06-CAMHDA301/%04d/%02d/%02d/%s.mov" % (int(match.group(1)), int(match.group(2)), int(match.group(3)),basename), 'utf-8')
 
 
 
 # An object-oriented version of the same API
 class LazycacheAccessor:
     def __init__(self, lazycache = DEFAULT_LAZYCACHE, verbose = False ):
-        self.lazycache = lazycache
+        self.lazycache = lazycache if lazycache else DEFAULT_LAZYCACHE
         self.verbose = verbose
 
     def merge_url( self, path ):
         ## Merge path into lazycache URL
-        url = urllib.parse.urlsplit( self.lazycache )
-        url = url._replace( path= url.path + path )
+        url = urllib.parse.urlsplit( bytes(self.lazycache,'utf-8') )
+        url = url._replace( path=url.path + path )
         return urllib.parse.urlunsplit( url )
 
     def get_metadata( self, url, timeout = DEFAULT_TIMEOUT ):
