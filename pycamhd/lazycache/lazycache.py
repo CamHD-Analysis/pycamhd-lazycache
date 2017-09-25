@@ -13,7 +13,7 @@ import re
 
 import logging
 
-DEFAULT_LAZYCACHE = 'https://camhd-app-dev.appspot.com/v1/org/oceanobservatories/rawdata/files'
+DEFAULT_LAZYCACHE = 'https://camhd-cache.appspot.com/v1/org/oceanobservatories/rawdata/files'
 
 DEFAULT_TIMEOUT = 10  # seconds
 
@@ -40,7 +40,7 @@ def requests_retry_session(
     return session
 
 
-def get_metadata( url, lazycache = DEFAULT_LAZYCACHE, timeout = DEFAULT_TIMEOUT):
+def get_metadata( url, timeout = DEFAULT_TIMEOUT):
     r = requests_retry_session().get( url, timeout=timeout )
 
     if r.status_code != 200:
@@ -161,4 +161,7 @@ class LazycacheAccessor:
 
 
 def lazycache( url  = DEFAULT_LAZYCACHE, verbose=False):
+    if not url:
+        url = DEFAULT_LAZYCACHE
+
     return LazycacheAccessor(url, verbose=verbose)
