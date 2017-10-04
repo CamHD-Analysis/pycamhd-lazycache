@@ -63,11 +63,9 @@ def get_frame( url, frame_num, format = 'np', timeout = DEFAULT_TIMEOUT ):
 
     url = url._replace( path = url.path + bytes("/frame/%d%s" % (frame_num,fmt),'utf-8') )
 
-
-
     full_url = urllib.parse.urlunsplit( url )
 
-    #logging.info("pycamhd.lazycache: requesting %s" % full_url )
+    logging.info("pycamhd.lazycache: requesting %s" % full_url )
 
     r = requests_retry_session().get( full_url, timeout = timeout  )
 
@@ -85,6 +83,32 @@ def get_frame( url, frame_num, format = 'np', timeout = DEFAULT_TIMEOUT ):
     else:
         logging.error("Don't understand format type \"%s\"" % format)
         return None
+
+## Retrieve the frame'th frame from the mirror site at url
+def save_frame( url, frame_num, filename, format = 'np', timeout = DEFAULT_TIMEOUT ):
+
+    url = urllib.parse.urlsplit( url )
+
+    ## These  formats can be requested directly from the server
+    DIRECT_FROM_SERVER_FORMATS = ['png', 'jpg', 'jpeg']
+
+    fmt = ""
+    if format in DIRECT_FROM_SERVER_FORMATS:
+        fmt = ".%s" % format
+
+    url = url._replace( path = url.path + bytes("/frame/%d%s" % (frame_num,fmt),'utf-8') )
+
+    full_url = urllib.parse.urlunsplit( url )
+
+    #logging.info("pycamhd.lazycache: requesting %s" % full_url )
+
+    r = requests_retry_session().get( full_url, timeout = timeout  )
+
+    if r.status_code != 200:
+        return None
+
+    with open(filename, 'wb') as f:
+        f.write(r.content)
 
 def get_dir( url ):
     r = requests.get( url )
@@ -106,38 +130,45 @@ def find( url, regexp = 'mov$' ):
 
     return out
 
-
+# Given just the basename (the movie filename), returns the full path in the
+# CI hierarchy
 def convert_basename( basename ):
     prog = re.compile("CAMHDA301-(\d{4})(\d{2})(\d{2})T\d{6}Z")
     match = re.match(prog, basename)
 
-    return bytes("/RS03ASHS/PN03B/06-CAMHDA301/%04d/%02d/%02d/%s.mov" % (int(match.group(1)), int(match.group(2)), int(match.group(3)),basename), 'utf-8')
+    return "/RS03ASHS/PN03B/06-CAMHDA301/%04d/%02d/%02d/%s.mov" % (int(match.group(1)), int(match.group(2)), int(match.group(3)),basename)
 
 
 
 # An object-oriented version of the same API
 class LazycacheAccessor:
-    def __init__(self, lazycache = DEFAULT_LAZYCACHE, verbose = False ):
+    def __init__(self, lazycache=DEFAULT_LAZYCACHE, verbose=False ):
         self.lazycache = lazycache if lazycache else DEFAULT_LAZYCACHE
         self.verbose = verbose
 
     def merge_url( self, path ):
-        ## Merge path into lazycache URL
+        # Merge path into lazycache URL
         url = urllib.parse.urlsplit( bytes(self.lazycache,'utf-8') )
-        url = url._replace( path=url.path + path )
+        url = url._replace(path=url.path + bytes(path,'utf-8') )
         return urllib.parse.urlunsplit( url )
 
-    def get_metadata( self, url, timeout = DEFAULT_TIMEOUT ):
-        url = self.merge_url( url )
+    def get_metadata(self, url, timeout = DEFAULT_TIMEOUT ):
+        url = self.merge_url(url)
         if self.verbose:
             print("get_metadata: %s" % url)
-        return get_metadata( url, timeout = timeout )
+        return get_metadata(url, timeout=timeout)
 
-    def get_frame( self, url, frame_num, format = 'np', timeout =  DEFAULT_TIMEOUT ):
-        url = self.merge_url( url )
+    def get_frame(self, url, frame_num, format = 'np', timeout =  DEFAULT_TIMEOUT ):
+        url = self.merge_url(url)
         if self.verbose:
             print("get_frame: %s" % url)
         return get_frame( url, frame_num, format=format, timeout = timeout )
+
+    def save_frame(self, url, frame_num, filename, format = 'np', timeout =  DEFAULT_TIMEOUT ):
+        url = self.merge_url(url)
+        if self.verbose:
+            print("get_frame: %s" % url)
+        return save_frame( url, frame_num, filename, format=format, timeout = timeout )
 
     def get_dir( self, url ):
         url = self.merge_url( url )
@@ -160,7 +191,7 @@ class LazycacheAccessor:
 
 
 
-def lazycache( url  = DEFAULT_LAZYCACHE, verbose=False):
+def lazycache( url=DEFAULT_LAZYCACHE, verbose=False):
     if not url:
         url = DEFAULT_LAZYCACHE
 
