@@ -6,17 +6,41 @@ from PIL import Image
 
 # remote file
 filename = '/RS03ASHS/PN03B/06-CAMHDA301/2016/11/13/CAMHDA301-20161113T000000Z.mov'
-test_lazycache = 'https://camhd-app-dev-nocache.appspot.com/v1/org/oceanobservatories/rawdata/files'
+test_lazycache = 'http://localhost:8080/v1/org/oceanobservatories/rawdata/files'
+
+
+def check_image(img, format=None, mode=None):
+    assert isinstance( img, Image.Image )
+
+    assert img.width == 1920
+    assert img.height == 1080
+
+    if format:
+        assert img.format == format
+
+    if mode:
+        assert img.mode == mode
+
+
+def check_np(img):
+    assert isinstance( img, np.ndarray )
+
+    shape = img.shape
+    assert shape[2] == 4   # RGBA?
+    assert shape[1] == 1920
+    assert shape[0] == 1080
+
 
 def test_get_frame_np():
     # download moov_atom from remote file
     img = camhd.get_frame( test_lazycache + filename, 5000 )
+    check_np(img)
 
-    assert isinstance( img, np.ndarray )
+def test_get_frame_PIL_image():
+    # download moov_atom from remote file
+    img = camhd.get_frame( test_lazycache + filename, 5000, format = "Image" )
 
-    shape = img.shape
-    assert shape[1] == 1920
-    assert shape[0] == 1080
+    check_image( img, mode="RGBA")
 
 
 def test_get_frame_image():
@@ -25,21 +49,14 @@ def test_get_frame_image():
         # download moov_atom from remote file
         img = camhd.get_frame( test_lazycache + filename, 5000, format = format )
 
-        assert isinstance( img, Image.Image )
-
         ## PIL only knows "JPEG"
         format = "jpeg" if format == 'jpg' else format
 
-        assert img.format == format.upper()
-
-        shape = img.size
-        assert shape[0] == 1920
-        assert shape[1] == 1080
-
+        check_image(img, format=format.upper())
 
 ## Object-oriented version
 def test_get_frame_np_oo():
-    r = camhd.lazycache()
+    r = camhd.lazycache( test_lazycache )
     img = r.get_frame( filename, 5000 )
 
     assert isinstance( img, np.ndarray )

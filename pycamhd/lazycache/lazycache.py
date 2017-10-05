@@ -54,32 +54,46 @@ def get_frame( url, frame_num, format = 'np', timeout = DEFAULT_TIMEOUT ):
 
     url = urllib.parse.urlsplit( url )
 
-    DIRECT_FROM_SERVER_FORMATS = ['png', 'jpg', 'jpeg']
+    DIRECT_FROM_SERVER_FORMATS = ['png', 'jpg', 'jpeg', 'bmp']
 
-    ## These two formats can be requested directly from the server
+    ## These formats can be requested directly from the server
     fmt = ""
     if format in DIRECT_FROM_SERVER_FORMATS:
         fmt = ".%s" % format
 
-    url = url._replace( path = url.path + bytes("/frame/%d%s" % (frame_num,fmt),'utf-8') )
+        url = url._replace( path = url.path + "/frame/%d%s" % (frame_num,fmt) )
+        full_url = urllib.parse.urlunsplit(url)
+        logging.info("pycamhd.lazycache: requesting %s" % full_url)
 
-    full_url = urllib.parse.urlunsplit( url )
+        r = requests_retry_session().get( full_url, timeout = timeout  )
 
-    logging.info("pycamhd.lazycache: requesting %s" % full_url )
+        # TODO.  More validation here could be done here...
+        if r.status_code != 200:
+            return None
 
-    r = requests_retry_session().get( full_url, timeout = timeout  )
-
-    if r.status_code != 200:
-        return None
-
-    img = Image.open( BytesIO( r.content ) )
-
-    # TODO.  More validation here could be done here...
-
-    if format == 'np':
-        return np.array( img.convert() )
-    elif format in DIRECT_FROM_SERVER_FORMATS:
+        img = Image.open( BytesIO( r.content ) )
         return img
+
+    elif format in ['np','Image']:
+
+        url = url._replace(path=url.path + "/frame/%d.rgba" % (frame_num))
+        full_url = urllib.parse.urlunsplit(url)
+        logging.info("pycamhd.lazycache: requesting %s" % full_url)
+
+        r = requests_retry_session().get(full_url, timeout = timeout)
+
+        # TODO.  More validation here could be done here...
+        if r.status_code != 200:
+            return None
+
+        if format is 'Image':
+            img = Image.frombytes('RGBA', [1920,1080], r.content)
+            return img
+
+
+        array =  np.frombuffer(r.content, dtype=np.dtype('uint8'))
+        return np.reshape(array, [1080,1920,4])
+
     else:
         logging.error("Don't understand format type \"%s\"" % format)
         return None
@@ -96,7 +110,7 @@ def save_frame( url, frame_num, filename, format = 'np', timeout = DEFAULT_TIMEO
     if format in DIRECT_FROM_SERVER_FORMATS:
         fmt = ".%s" % format
 
-    url = url._replace( path = url.path + bytes("/frame/%d%s" % (frame_num,fmt),'utf-8') )
+    url = url._replace( path=url.path + "/frame/%d%s" % (frame_num,fmt) )
 
     full_url = urllib.parse.urlunsplit( url )
 
@@ -148,9 +162,9 @@ class LazycacheAccessor:
 
     def merge_url( self, path ):
         # Merge path into lazycache URL
-        url = urllib.parse.urlsplit( bytes(self.lazycache,'utf-8') )
-        url = url._replace(path=url.path + bytes(path,'utf-8') )
-        return urllib.parse.urlunsplit( url )
+        url = urllib.parse.urlsplit(self.lazycache)
+        url = url._replace(path=url.path + path)
+        return urllib.parse.urlunsplit(url)
 
     def get_metadata(self, url, timeout = DEFAULT_TIMEOUT ):
         url = self.merge_url(url)
