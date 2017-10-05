@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import pycamhd.lazycache as camhd
+import pycamhd
 import numpy as np
 from PIL import Image
 import random
@@ -49,8 +49,8 @@ def check_image(img, format=None, mode="RGBA"):
 def do_get_frame(filename, format):
     ## TODO:   This mechanism results in downloading the same frame_num repeatedly...
     ## Fix so it's actually downloading different images
-    meta=camhd.get_metadata(test_lazycache+filename)
-    img=camhd.get_frame(test_lazycache + filename, frame_num=random.uniform(0,meta['NumFrames']), format=format)
+    meta=pycamhd.Lazycache.get_metadata(test_lazycache+filename)
+    img=pycamhd.Lazycache.get_frame(test_lazycache + filename, frame_num=random.uniform(0,meta['NumFrames']), format=format)
     check_image(img,format)
 
 
@@ -85,10 +85,3 @@ def test_get_frame_png_overlay():
 
 def test_get_frame_png_nonoverlay():
     do_get_frame(filename_nonoverlay, "png")
-
-
-
-## Test file can be run as a standalone.  Why?  Was diagnosing segfaults
-# and some of the debug output was being hidden by pytest
-if __name__ == "__main__":
-    test_get_frame_image()
