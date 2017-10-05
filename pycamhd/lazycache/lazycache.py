@@ -50,9 +50,9 @@ def get_metadata( url, timeout = DEFAULT_TIMEOUT):
 
 
 ## Retrieve the frame'th frame from the mirror site at url
-def get_frame( url, frame_num, format = 'np', timeout = DEFAULT_TIMEOUT ):
+def get_frame( orig_url, frame_num, format = 'np', timeout=DEFAULT_TIMEOUT, fail_raw=False ):
 
-    url = urllib.parse.urlsplit( url )
+    url = urllib.parse.urlsplit( orig_url )
 
     DIRECT_FROM_SERVER_FORMATS = ['png', 'jpg', 'jpeg', 'bmp']
 
@@ -80,7 +80,28 @@ def get_frame( url, frame_num, format = 'np', timeout = DEFAULT_TIMEOUT ):
         full_url = urllib.parse.urlunsplit(url)
         logging.info("pycamhd.lazycache: requesting %s" % full_url)
 
-        r = requests_retry_session().get(full_url, timeout = timeout)
+        r = requests_retry_session().get(full_url, timeout=timeout)
+
+        # If the server can't handle rawdata,
+        if r.status_code == 501:
+
+            if fail_raw:
+                # Should this be an exception?
+                return None
+
+            # Fallback to getting the PNG
+            img = get_frame(orig_url, frame_num, format='png', timeout=timeout)
+            if not img:
+                return None
+
+            ## The PNG comes without an alpha channel, interestingly...
+            img.putalpha(1)
+
+            if format is 'np':
+                return np.array(img.convert())
+
+            return img
+
 
         # TODO.  More validation here could be done here...
         if r.status_code != 200:
