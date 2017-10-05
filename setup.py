@@ -16,9 +16,9 @@ def find_version(*file_paths):
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
 
-version = find_version('pycamhd', '__init__.py')
+version = find_version('pycamhd', 'lazycache', '__init__.py')
 
-setup(name='pycamhdlazycache',
+setup(name='pycamhd-lazycache',
       version=version,
       description='Module for retrieving CamHD data through a LazyCache server',
       long_description='README.rst',
@@ -27,7 +27,7 @@ setup(name='pycamhdlazycache',
       author_email='amarburg@apl.washington.edu',
       license='MIT',
       python_requires='>=3',
-      packages=['pycamhd'],
+      packages=['pycamhd.lazycache'],
       install_requires=['requests','pillow'],
       setup_requires=['pytest-runner'],
       tests_require=['pytest', 'numpy', 'pillow'])
