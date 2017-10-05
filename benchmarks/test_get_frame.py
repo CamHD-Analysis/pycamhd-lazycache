@@ -7,11 +7,15 @@ import random
 
 # remote file
 
-#filename = '/RS03ASHS/PN03B/06-CAMHDA301/2016/11/13/CAMHDA301-20161113T000000Z.mov'
+
+
 DEFAULT_FRAME_NUM=5000
 
-# this file is in the overlay...
-filename = '/RS03ASHS/PN03B/06-CAMHDA301/2016/07/24/CAMHDA301-20160724T030000Z.mov'
+# This file is in the overlay on Berna
+filename_overlay = '/RS03ASHS/PN03B/06-CAMHDA301/2016/07/24/CAMHDA301-20160724T030000Z.mov'
+
+# This file is _not_ in the overlay on Berna
+filename_nonoverlay = '/RS03ASHS/PN03B/06-CAMHDA301/2016/11/13/CAMHDA301-20161113T000000Z.mov'
 
 test_lazycache = 'http://localhost:8080/v1/org/oceanobservatories/rawdata/files'
 
@@ -26,7 +30,7 @@ def check_image(img, format=None, mode="RGBA"):
         assert shape[0] == 1080
         return
 
-
+    ## For other formats, the object should be a PIL.Image.Image
     ## PIL only knows "JPEG", not 'JPG'
     format = "jpeg" if format == 'jpg' else format
 
@@ -41,39 +45,46 @@ def check_image(img, format=None, mode="RGBA"):
         if format:
             assert img.format == format.upper()
 
-def do_get_frame(format, frame_num=DEFAULT_FRAME_NUM):
-    return camhd.get_frame(test_lazycache + filename, frame_num, format=format)
 
-def test_get_frame_np(benchmark):
+def do_get_frame(benchmark, filename, format):
+    ## TODO:   This mechanism results in downloading the same frame_num repeatedly...
+    ## Fix so it's actually downloading different images
     meta=camhd.get_metadata(test_lazycache+filename)
-    img=benchmark(do_get_frame, frame_num=random.uniform(0,meta['NumFrames']), format="np")
-    check_image(img,'np')
-
-def test_get_frame_PIL_image(benchmark):
-    format="Image"
-    meta=camhd.get_metadata(test_lazycache+filename)
-    img=benchmark(do_get_frame,format, frame_num=random.uniform(0,meta['NumFrames']))
-    check_image(img,format)
-
-def test_get_frame_png(benchmark):
-    format="png"
-    meta=camhd.get_metadata(test_lazycache+filename)
-    img=benchmark(do_get_frame, format, frame_num=random.uniform(0,meta['NumFrames']))
-    check_image(img,format)
-
-def test_get_frame_jpg(benchmark):
-    format="jpg"
-    meta=camhd.get_metadata(test_lazycache+filename)
-    img=benchmark(do_get_frame, format, frame_num=random.uniform(0,meta['NumFrames']))
-    check_image(img,format)
-
-def test_get_frame_bmp(benchmark):
-    format="bmp"
-    meta=camhd.get_metadata(test_lazycache+filename)
-    img=benchmark(do_get_frame, format, frame_num=random.uniform(0,meta['NumFrames']))
+    img=benchmark(camhd.get_frame, test_lazycache + filename, frame_num=random.uniform(0,meta['NumFrames']), format=format)
     check_image(img,format)
 
 
+## Could I generate these programmatically?
+
+def test_get_frame_np_overlay(benchmark):
+    do_get_frame(benchmark, filename_overlay, "np")
+
+def test_get_frame_np_nonoverlay(benchmark):
+    do_get_frame(benchmark, filename_nonoverlay, "np")
+
+def test_get_frame_PIL_Image_overlay(benchmark):
+    do_get_frame(benchmark, filename_overlay, "Image")
+
+def test_get_frame_PIL_Image_nonoverlay(benchmark):
+    do_get_frame(benchmark, filename_nonoverlay, "Image")
+
+def test_get_frame_bmp_overlay(benchmark):
+    do_get_frame(benchmark, filename_overlay, "bmp")
+
+def test_get_frame_bmp_nonoverlay(benchmark):
+    do_get_frame(benchmark, filename_nonoverlay, "bmp")
+
+def test_get_frame_jpg_overlay(benchmark):
+    do_get_frame(benchmark, filename_overlay, "jpg")
+
+def test_get_frame_jpg_nonoverlay(benchmark):
+    do_get_frame(benchmark, filename_nonoverlay, "jpg")
+
+def test_get_frame_png_overlay(benchmark):
+    do_get_frame(benchmark, filename_overlay, "png")
+
+def test_get_frame_png_nonoverlay(benchmark):
+    do_get_frame(benchmark, filename_nonoverlay, "png")
 
 
 
