@@ -3,67 +3,89 @@
 import pycamhd.lazycache as camhd
 import numpy as np
 from PIL import Image
+import random
 
 # remote file
-filename = '/RS03ASHS/PN03B/06-CAMHDA301/2016/11/13/CAMHDA301-20161113T000000Z.mov'
+
+
+
+DEFAULT_FRAME_NUM=5000
+
+# This file is in the overlay on Berna
+filename_overlay = '/RS03ASHS/PN03B/06-CAMHDA301/2016/07/24/CAMHDA301-20160724T030000Z.mov'
+
+# This file is _not_ in the overlay on Berna
+filename_nonoverlay = '/RS03ASHS/PN03B/06-CAMHDA301/2016/11/13/CAMHDA301-20161113T000000Z.mov'
+
 test_lazycache = 'http://localhost:8080/v1/org/oceanobservatories/rawdata/files'
 
+def check_image(img, format=None, mode="RGBA"):
 
-def check_image(img, format=None, mode=None):
+    if format is 'np':
+        assert isinstance( img, np.ndarray )
+
+        shape = img.shape
+        assert shape[2] == 4   # RGBA?
+        assert shape[1] == 1920
+        assert shape[0] == 1080
+        return
+
+    ## For other formats, the object should be a PIL.Image.Image
+    ## PIL only knows "JPEG", not 'JPG'
+    format = "jpeg" if format == 'jpg' else format
+
     assert isinstance( img, Image.Image )
 
     assert img.width == 1920
     assert img.height == 1080
 
-    if format:
-        assert img.format == format
-
-    if mode:
+    if mode and format is "Image":
         assert img.mode == mode
+    else:
+        if format:
+            assert img.format == format.upper()
 
 
-def check_np(img):
-    assert isinstance( img, np.ndarray )
-
-    shape = img.shape
-    assert shape[2] == 4   # RGBA?
-    assert shape[1] == 1920
-    assert shape[0] == 1080
-
-
-def test_get_frame_np():
-    # download moov_atom from remote file
-    img = camhd.get_frame( test_lazycache + filename, 5000 )
-    check_np(img)
-
-def test_get_frame_PIL_image():
-    # download moov_atom from remote file
-    img = camhd.get_frame( test_lazycache + filename, 5000, format = "Image" )
-
-    check_image( img, mode="RGBA")
+def do_get_frame(filename, format):
+    ## TODO:   This mechanism results in downloading the same frame_num repeatedly...
+    ## Fix so it's actually downloading different images
+    meta=camhd.get_metadata(test_lazycache+filename)
+    img=camhd.get_frame(test_lazycache + filename, frame_num=random.uniform(0,meta['NumFrames']), format=format)
+    check_image(img,format)
 
 
-def test_get_frame_image():
+## Could I generate these programmatically?
 
-    for format in ['png', 'jpeg', 'jpg']:
-        # download moov_atom from remote file
-        img = camhd.get_frame( test_lazycache + filename, 5000, format = format )
+def test_get_frame_np_overlay():
+    do_get_frame(filename_overlay, "np")
 
-        ## PIL only knows "JPEG"
-        format = "jpeg" if format == 'jpg' else format
+def test_get_frame_np_nonoverlay():
+    do_get_frame(filename_nonoverlay, "np")
 
-        check_image(img, format=format.upper())
+def test_get_frame_PIL_Image_overlay():
+    do_get_frame(filename_overlay, "Image")
 
-## Object-oriented version
-def test_get_frame_np_oo():
-    r = camhd.lazycache( test_lazycache )
-    img = r.get_frame( filename, 5000 )
+def test_get_frame_PIL_Image_nonoverlay():
+    do_get_frame(filename_nonoverlay, "Image")
 
-    assert isinstance( img, np.ndarray )
+def test_get_frame_bmp_overlay():
+    do_get_frame(filename_overlay, "bmp")
 
-    shape = img.shape
-    assert shape[1] == 1920
-    assert shape[0] == 1080
+def test_get_frame_bmp_nonoverlay():
+    do_get_frame(filename_nonoverlay, "bmp")
+
+def test_get_frame_jpg_overlay():
+    do_get_frame(filename_overlay, "jpg")
+
+def test_get_frame_jpg_nonoverlay():
+    do_get_frame(filename_nonoverlay, "jpg")
+
+def test_get_frame_png_overlay():
+    do_get_frame(filename_overlay, "png")
+
+def test_get_frame_png_nonoverlay():
+    do_get_frame(filename_nonoverlay, "png")
+
 
 
 ## Test file can be run as a standalone.  Why?  Was diagnosing segfaults
