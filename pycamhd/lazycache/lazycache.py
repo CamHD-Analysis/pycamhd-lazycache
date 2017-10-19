@@ -169,7 +169,7 @@ def find( url, regexp = 'mov$' ):
 # Given just the basename (the movie filename), returns the full path in the
 # CI hierarchy
 def convert_basename( basename ):
-    prog = re.compile("CAMHDA301-(\d{4})(\d{2})(\d{2})T\d{6}Z")
+    prog = re.compile("CAMHDA301-(\d{4})(\d{2})(\d{2})T\d{6}")
     match = re.match(prog, basename)
 
     return "/RS03ASHS/PN03B/06-CAMHDA301/%04d/%02d/%02d/%s.mov" % (int(match.group(1)), int(match.group(2)), int(match.group(3)),basename)
