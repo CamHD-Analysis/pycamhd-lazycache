@@ -10,7 +10,8 @@ from pycamhd import lazycache
 # remote file
 filename = '/RS03ASHS/PN03B/06-CAMHDA301/2016/11/13/CAMHDA301-20161113T000000Z.mov'
 filename_num_frames = 25169
-test_lazycache = 'https://camhd-cache.appspot.com/v1/org/oceanobservatories/rawdata/files'
+
+test_lazycache = 'http://cache.camhd.science/v1/org/oceanobservatories/rawdata/files'
 
 def test_get_frame_count():
     # download moov_atom from remote file

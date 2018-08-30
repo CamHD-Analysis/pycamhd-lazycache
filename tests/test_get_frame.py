@@ -15,7 +15,7 @@ filename_overlay = '/RS03ASHS/PN03B/06-CAMHDA301/2016/07/24/CAMHDA301-20160724T0
 # This file is _not_ in the overlay on Berna
 filename_nonoverlay = '/RS03ASHS/PN03B/06-CAMHDA301/2016/11/13/CAMHDA301-20161113T000000Z.mov'
 
-test_lazycache = 'http://localhost:8080/v1/org/oceanobservatories/rawdata/files'
+test_lazycache = 'http://cache.camhd.science/v1/org/oceanobservatories/rawdata/files'
 
 def check_image(img, format=None, mode="RGBA"):
 
