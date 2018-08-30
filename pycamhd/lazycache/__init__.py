@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from .lazycache import *
+from pycamhd.lazycache.lazycache import *
 
-__version__ = '0.1.2'
-
-VERSION = __version__
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

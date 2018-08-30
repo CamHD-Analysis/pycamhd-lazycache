@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
-import pycamhd
+from pycamhd import lazycache
 import numpy as np
 from PIL import Image
 import random
 
 # remote file
-
-
 
 DEFAULT_FRAME_NUM=5000
 
@@ -49,8 +47,8 @@ def check_image(img, format=None, mode="RGBA"):
 def do_get_frame(filename, format):
     ## TODO:   This mechanism results in downloading the same frame_num repeatedly...
     ## Fix so it's actually downloading different images
-    meta=pycamhd.Lazycache.get_metadata(test_lazycache+filename)
-    img=pycamhd.Lazycache.get_frame(test_lazycache + filename, frame_num=random.uniform(0,meta['NumFrames']), format=format)
+    meta=lazycache.get_metadata(test_lazycache+filename)
+    img=lazycache.get_frame(test_lazycache + filename, frame_num=random.uniform(0,meta['NumFrames']), format=format)
     check_image(img,format)
 
 

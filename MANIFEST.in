@@ -1,0 +1,4 @@
+include README.md
+include *.txt
+include versioneer.py
+include pycamhd/lazycache/_version.py
