@@ -13,7 +13,9 @@ import re
 
 import logging
 
-DEFAULT_LAZYCACHE = 'https://camhd-cache.appspot.com/v1/org/oceanobservatories/rawdata/files'
+# Current CamHD Cache hosted at Digital Ocean
+DEFAULT_LAZYCACHE = 'https://cache.camhd.science/v1/org/oceanobservatories/rawdata/files'
+
 
 DEFAULT_TIMEOUT = 10  # seconds
 
