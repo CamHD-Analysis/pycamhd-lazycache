@@ -53,18 +53,27 @@ def get_metadata( url, timeout = DEFAULT_TIMEOUT):
 
 
 ## Retrieve the frame'th frame from the mirror site at url
-def get_frame( orig_url, frame_num, format = 'np', timeout=DEFAULT_TIMEOUT, fail_raw=False ):
+def get_frame(orig_url, frame_num, format='np', timeout=DEFAULT_TIMEOUT, fail_raw=False, width=1920, height=1080):
 
     url = urllib.parse.urlsplit( orig_url )
 
     DIRECT_FROM_SERVER_FORMATS = ['png', 'jpg', 'jpeg', 'bmp']
+
+    # Image size parameters as a suffix for the URL.
+    if width <= 0 and width > 1920:
+        raise ValueError("The width parameter is invalid: %s" % width)
+
+    if height <= 0 and height > 1080:
+        raise ValueError("The height parameter is invalid: %s" % width)
+
+    img_size_url_suffix = "?width=%d&height=%d" % (width, height)
 
     ## These formats can be requested directly from the server
     fmt = ""
     if format in DIRECT_FROM_SERVER_FORMATS:
         fmt = ".%s" % format
 
-        url = url._replace( path = url.path + "/frame/%d%s" % (frame_num,fmt) )
+        url = url._replace(path=url.path + "/frame/%d%s%s" % (frame_num, fmt, img_size_url_suffix))
         full_url = urllib.parse.urlunsplit(url)
         logging.info("pycamhd.lazycache: requesting %s" % full_url)
 
@@ -79,7 +88,7 @@ def get_frame( orig_url, frame_num, format = 'np', timeout=DEFAULT_TIMEOUT, fail
 
     elif format in ['np','Image']:
 
-        url = url._replace(path=url.path + "/frame/%d.rgba" % (frame_num))
+        url = url._replace(path=url.path + "/frame/%d.rgba%s" % (frame_num, img_size_url_suffix))
         full_url = urllib.parse.urlunsplit(url)
         logging.info("pycamhd.lazycache: requesting %s" % full_url)
 
@@ -93,7 +102,7 @@ def get_frame( orig_url, frame_num, format = 'np', timeout=DEFAULT_TIMEOUT, fail
                 return None
 
             # Fallback to getting the PNG
-            img = get_frame(orig_url, frame_num, format='png', timeout=timeout)
+            img = get_frame(orig_url, frame_num, format='png', timeout=timeout, width=width, height=height)
             if not img:
                 return None
 
@@ -111,12 +120,12 @@ def get_frame( orig_url, frame_num, format = 'np', timeout=DEFAULT_TIMEOUT, fail
             return None
 
         if format is 'Image':
-            img = Image.frombytes('RGBA', [1920,1080], r.content)
+            img = Image.frombytes('RGBA', [width, height], r.content)
             return img
 
 
         array =  np.frombuffer(r.content, dtype=np.dtype('uint8'))
-        return np.reshape(array, [1080,1920,4])
+        return np.reshape(array, [height, width, 4])
 
     else:
         logging.error("Don't understand format type \"%s\"" % format)
@@ -196,11 +205,11 @@ class LazycacheAccessor:
             print("get_metadata: %s" % url)
         return get_metadata(url, timeout=timeout)
 
-    def get_frame(self, url, frame_num, format = 'np', timeout =  DEFAULT_TIMEOUT ):
+    def get_frame(self, url, frame_num, format='np', timeout=DEFAULT_TIMEOUT, width=1920, height=1080):
         url = self.merge_url(url)
         if self.verbose:
             print("get_frame: %s" % url)
-        return get_frame( url, frame_num, format=format, timeout = timeout )
+        return get_frame( url, frame_num, format=format, timeout=timeout, width=width, height=height)
 
     def save_frame(self, url, frame_num, filename, format = 'np', timeout =  DEFAULT_TIMEOUT ):
         url = self.merge_url(url)
