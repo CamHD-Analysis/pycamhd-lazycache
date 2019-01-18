@@ -53,7 +53,7 @@ def get_metadata( url, timeout = DEFAULT_TIMEOUT):
 
 
 ## Retrieve the frame'th frame from the mirror site at url
-def get_frame( orig_url, frame_num, format='np', timeout=DEFAULT_TIMEOUT, fail_raw=False, width=1920, height=1080):
+def get_frame(orig_url, frame_num, format='np', timeout=DEFAULT_TIMEOUT, fail_raw=False, width=1920, height=1080):
 
     url = urllib.parse.urlsplit( orig_url )
 
